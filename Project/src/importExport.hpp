@@ -1,7 +1,6 @@
 #pragma once
 
 #include "FracturesAndTraces.hpp"
-#include "PolygonalMesh.hpp"
 
 using namespace std;
 using namespace DiscreteAndFractureNetworkLibrary;

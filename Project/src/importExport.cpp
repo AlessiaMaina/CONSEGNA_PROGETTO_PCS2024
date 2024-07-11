@@ -1,7 +1,7 @@
 #include "FracturesAndTraces.hpp"
 #include "importExport.hpp"
 #include "Utils.hpp"
-#include "PolygonalMesh.hpp"
+
 
 #include <iostream>
 #include <sstream>

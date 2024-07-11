@@ -2,8 +2,6 @@
 
 #include "FracturesAndTraces.hpp"
 #include "importExport.hpp"
-#include "PolygonalMesh.hpp"
-
 
 
 using namespace std;

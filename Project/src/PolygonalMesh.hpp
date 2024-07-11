@@ -7,8 +7,6 @@
 using namespace std;
 using namespace Eigen;
 
-// Struttura necessaria per lo sviluppo della SECONDA PARTE del codice
-
 
 namespace PolygonalLibrary
 {
