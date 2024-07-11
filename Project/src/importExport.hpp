@@ -4,7 +4,6 @@
 
 using namespace std;
 using namespace DiscreteAndFractureNetworkLibrary;
-using namespace PolygonalLibrary;
 
 
 bool importListFractures(strFractures& fractures,

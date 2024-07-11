@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <iomanip>    // Serve per l'utilizzo di setprecision
+#include <iomanip>
 #include <string>
 #include <Eigen/Eigen>
 
@@ -14,7 +14,6 @@
 using namespace std;
 using namespace Eigen;
 using namespace DiscreteAndFractureNetworkLibrary;
-using namespace PolygonalLibrary;
 
 
 bool importListFractures(strFractures& fractures, const string& inputFilePath)

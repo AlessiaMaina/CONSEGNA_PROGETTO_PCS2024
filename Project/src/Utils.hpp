@@ -6,7 +6,6 @@
 
 using namespace std;
 using namespace DiscreteAndFractureNetworkLibrary;
-using namespace PolygonalLibrary;
 
 
 bool testEdgesOfFracture(const strFractures& fractures);

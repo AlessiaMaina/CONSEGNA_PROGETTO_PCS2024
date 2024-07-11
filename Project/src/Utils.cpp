@@ -114,9 +114,11 @@ BoundingSphere computeBoundingSphere(const vector<Vector3d>& vertices)
 
     for (const auto& vertex : vertices)
     {
+        // Calcolo della distanza tra un vertice e quello più lontano
         double dist = distance(vertex, farVert);
         if (dist > maxDistance)
         {
+            // Aggiornamento delle variabili
             maxDistance = dist;
             secFarVert = vertex;
         }
@@ -135,7 +137,8 @@ BoundingSphere computeBoundingSphere(const vector<Vector3d>& vertices)
         {
             double newRadius = (radius + dist) / 2.0;
             // Fattore di scala: è un fattore che serve per determinare l'espansione uniforme della sfera il cui centro
-            // deve spostarsi in relazione al vertice più distante
+            // deve spostarsi in relazione al vertice più distante. Viene utilizzato per aggiornare iterativamente
+            // la posizione del centroide della Bounding Sphere
             double scaleFactor = (newRadius - radius) / dist;
 
             center = (1 - scaleFactor) * center + scaleFactor * vertex;
@@ -174,11 +177,11 @@ Vector3d normal(const vector<Vector3d>& fracture)
     Vector3d u = commonVert - uVert;        // Indica il vettore u
     Vector3d v = commonVert - vVert;        // Indica il vettore v
 
-    Vector3d crossProd = (u.cross(v));
-    Vector3d vertNormal = crossProd.normalized();
-    // Il prodotto vettoriale deve essere normalizzato, poichè n = (u x v) / || u x v ||
+    Vector3d crossProd = (u.cross(v));      // Calcolo del prodotto vettoriale tra il vettore u e v
+    Vector3d n = crossProd.normalized();
+    // Il prodotto vettoriale deve essere normalizzato, al fine di ottenere il vettore normale al poligono
 
-    return vertNormal;
+    return n;
 }
 
 
@@ -451,8 +454,7 @@ bool isPointInSegment(const Vector3d& point, const Vector3d& p1, const Vector3d&
     return true;
 }
 
-
-
+// Definizione di una funzione che calcola la tipologia della traccia, passante o non passante
 void computeTypeTrace(const strFractures& fractures, strTraces& traces)
 {
     // Ciclo FOR principale, che itera su tutte le tracce presenti in traces
@@ -578,7 +580,7 @@ void orderTraces(strTraces& traces)
     {
         unsigned int idx = trace.second;
         orderedFractureIds.push_back(traces.FractureIds[idx]);
-        orderedVerticesOfTraces[idx] = traces.VerticesOfTraces[idx]; // Assegna valore alla mappa
+        orderedVerticesOfTraces[idx] = traces.VerticesOfTraces[idx];
         orderedTips.push_back(traces.Tips[idx]);
         orderedLengths.push_back(traces.TraceLength[idx]);
         orderedTraceId.push_back(traces.TraceId[idx]);
