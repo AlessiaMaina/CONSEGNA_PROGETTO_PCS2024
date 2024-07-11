@@ -1,7 +1,6 @@
 #include "Utils.hpp"
 #include "importExport.hpp"
 #include "SortingAlgorithm_MERGESORT.hpp"
-#include "PolygonalMesh.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -20,7 +19,6 @@ using namespace std;
 using namespace Eigen;
 using namespace DiscreteAndFractureNetworkLibrary;
 using namespace SortLibrary;
-using namespace PolygonalLibrary;
 
 
 // *************************************************************************************************************************************

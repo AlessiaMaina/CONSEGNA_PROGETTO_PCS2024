@@ -12,8 +12,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
-#include <optional>
-#include <filesystem>
+
 
 using namespace std;
 using namespace Eigen;
@@ -31,7 +30,6 @@ int main()
     // Dichiarazione delle strutture utilizzate
     strFractures fractures;
     strTraces traces;
-    strPolygonalMesh polyMesh;
 
 
     // IMPORT del file contenente le infomazioni sulle fratture
