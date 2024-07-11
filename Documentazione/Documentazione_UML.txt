@@ -1,0 +1,92 @@
+@startuml
+
+skinparam defaultFontSize 19
+
+package DiscreteAndFractureNetworkLibrary 
+{
+
+class strFractures
+{
++ NumberOfFractures: unsigned int
++ FractureId: vector<unsigned int>
++ NumberOfVertices: vector<unsigned int>
++ VerticesOfFractures: map <unsigned int, vector<Vector3d>>
+
+..Non member functions ..
++ bool importListFractures(strFractures& fractures, const string& inputFilePath)                         
+
+
+..FRACTURESTEST..
+TESTImportFractures
++ bool testEdgesOfFracture(const strFractures& fractures)
++ bool testVerticesOfFracture(const strFractures& fractures)
+
+
+}
+
+
+
+class strBoundingSphere
+{
++ center: Vector3d
++ radius: double
+
+
+..Non member function..
++ BoundingSphere computeBoundingSphere(const vector<Vector3d>& vertices)
++ bool proximityOfFractures(const BoundingSphere& sphere1, const BoundingSphere& sphere2, const double radiusTolerance);
+
+..BOUNDINGSPHERESTEST..
+TESTComputeBoundingSphere
+
+}
+
+
+
+class strTraces
+{
++ NumberOfTraces: unsigned int
++ TraceId: vector<unsigned int>
++ FracturesIds: vector<Vector2i>
++ VerticesOfTraces: map<unsigned int, array<Vector3d, 2>
++ FracturesWithTraceId: vector<unsigned int>
++ Tips: vector<bool>
++ TraceLenght: vector<double>
+
+
+..Non member functions ..
++ void definitionOfTraces(strFractures& frac, strTraces& trac)
++ void computeTypeTrace(const strFractures& fractures, strTraces& traces)
++ void lengthTraces(strTraces& traces)
++ void orderTraces(strTraces& traces)
++ bool generateTracesInfo(strTraces& trac, const string& outputFilePath)                        
++ bool generateTracesTips(const strFractures& fractures, strTraces& traces, const string &outputFilePath)
+
+
+..TRACETEST..
+TESTOverTraces
+}
+
+}
+
+package MergeSort <<Frame>>
+{
+}
+
+MergeSort..> strTraces
+
+
+
+package Eigen <<Frame>>
+{
+}
+
+note "Eigen è una libreria esterna per definire le strutture principali" as EigenLibrary
+EigenLibrary.. Eigen
+
+Eigen..> DiscreteAndFractureNetworkLibrary
+
+strFractures "1"--o "1" strBoundingSphere : has
+
+
+@enduml
