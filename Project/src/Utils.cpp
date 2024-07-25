@@ -28,7 +28,7 @@ using namespace SortLibrary;
 
 
 const double machineEpsilon = numeric_limits<double>::epsilon();          // Definizione della tolleranza
-const double defaultTolerance = pow(10,-6);
+const double defaultTolerance = pow(10,-10);
 
 // TEST 1: Verificare nella frattura la presenza di lati tutti diversi da zero
 bool testEdgesOfFracture(const strFractures& fractures)
