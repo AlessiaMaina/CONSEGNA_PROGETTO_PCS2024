@@ -33,7 +33,7 @@ int main()
 
 
     // IMPORT del file contenente le infomazioni sulle fratture
-    string fileInput = "./DFN/FR3_data.txt";
+    string fileInput = "./DFN/FR362_data.txt";
 
     if(!importListFractures(fractures, fileInput))
     {
@@ -49,7 +49,7 @@ int main()
     bool test1Passed = testEdgesOfFracture(fractures);
     bool test2Passed = testVerticesOfFracture(fractures);
 
-    // Se almeno uno dei 2 test viene eseguito con esito negativo, allora viene restituito errore
+    // Se almeno uno dei 2 test viene eseguito con esito NEGATIVO, allora viene restituito errore
     if (!test1Passed || !test2Passed)
     {
         cerr << "ATTENTION: Tests failed. This is an error!" << endl;
@@ -64,8 +64,8 @@ int main()
     definitionOfTraces(fractures, traces);
 
 
-    // EXPORT del file contenente le infomazioni sulle tracce
-    string outputTraceInfo = "./Traces_Info_FR3.txt";
+    // EXPORT del file contenente le informazioni sulle tracce
+    string outputTraceInfo = "./Traces_Info_FR362.txt";
 
     if(!generateTracesInfo(traces, outputTraceInfo))
     {
@@ -74,12 +74,12 @@ int main()
 
 
     // EXPORT del file contenente le tipologie delle tracce
-    string outputTraceTips = "./Traces_Tips_FR3.txt";
-
+    string outputTraceTips = "./Traces_Tips_FR362.txt";
 
     computeTypeTrace(fractures, traces);
     lengthTraces(traces);
     orderTraces(traces);
+
 
     if (!generateTracesTips(fractures, traces, outputTraceTips))
     {

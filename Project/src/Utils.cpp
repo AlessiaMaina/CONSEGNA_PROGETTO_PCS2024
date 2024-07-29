@@ -14,7 +14,6 @@
 #include <limits>
 
 
-
 using namespace std;
 using namespace Eigen;
 using namespace DiscreteAndFractureNetworkLibrary;
@@ -26,9 +25,10 @@ using namespace SortLibrary;
 // *************************************************************************************************************************************
 
 
-
-const double machineEpsilon = numeric_limits<double>::epsilon();          // Definizione della tolleranza
+// Definizione delle tolleranze
+const double machineEpsilon = numeric_limits<double>::epsilon();
 const double defaultTolerance = pow(10,-10);
+
 
 // TEST 1: Verificare nella frattura la presenza di lati tutti diversi da zero
 bool testEdgesOfFracture(const strFractures& fractures)
@@ -67,6 +67,7 @@ bool testVerticesOfFracture(const strFractures& fractures)
     return true;
 }
 
+
 // Definizione di una funzione serve a verificare se due vettori 3d sono "quasi" uguali
 bool areVectorsEqual(const Vector3d& v1, const Vector3d& v2)
 {
@@ -77,12 +78,16 @@ bool areVectorsEqual(const Vector3d& v1, const Vector3d& v2)
     return false;
 }
 
+
 double distance(const Vector3d& a, const Vector3d& b)
 {
     double distAB = (a - b).norm();
     return distAB;
 }
 
+
+// Definizione di una funzione che calcola la Bounding Sphere relativa ad una frattura (un poligono)
+// ovvero una sfera circoscritta per un insieme di vertici nello spazio tridimensionale
 BoundingSphere computeBoundingSphere(const vector<Vector3d>& vertices)
 {
     if (vertices.empty())
@@ -91,58 +96,30 @@ BoundingSphere computeBoundingSphere(const vector<Vector3d>& vertices)
         throw invalid_argument("ERROR: vector<Vector3d> vertices is empty");
     }
 
-    // Dato un vertice, viene trovato il punto più distante da esso che presenta una distanza massima
-    Vector3d x0 = vertices[0];
-    Vector3d farVert = vertices[0];
-    double maxDist = 0.0;
+    // Inizializzazione del vettore 3d contenente le coordinate del centro
+    Vector3d center = Vector3d::Zero();
+    // Inizializzazione del valore double per trovare il raggio massimo della Bounding Sphere
+    double radius = 0.0;
 
+    // Viene eseguito il calcolo del centro della Bounding Sphere pari alla media dei vertici
     for (const auto& vertex : vertices)
     {
-        double dist = distance(vertex, x0);
-
-        if (dist > maxDist)
-        {
-            // Aggiornamento della distanza massima e del punto più lontano
-            maxDist = dist;
-            farVert = vertex;
-        }
+        center += vertex;
     }
 
-    // Dato farthestPoint, trova il punto più lontano da esso per che presenta una distanza massima
-    Vector3d secFarVert = farVert;
-    double maxDistance = 0.0;
+    center /= vertices.size();
 
+    // Iterazione su ogni elemento di vertices
     for (const auto& vertex : vertices)
     {
-        // Calcolo della distanza tra un vertice e quello più lontano
-        double dist = distance(vertex, farVert);
-        if (dist > maxDistance)
-        {
-            // Aggiornamento delle variabili
-            maxDistance = dist;
-            secFarVert = vertex;
-        }
-    }
-
-    // Definizione della sfera iniziale, avente centro pari alla media dei 2 punti più lontani
-    // e avente come raggio la metà della distanza tra farthestPoint e secondFarthestPoint
-    Vector3d center = (farVert + secFarVert) / 2.0;
-    double radius = distance(farVert, secFarVert) / 2.0;
-
-    // Espansione della sfera per includere tutti i vertici
-    for (const auto& vertex : vertices)
-    {
+        // Calcolo della distanza tra il centro e il vertice corrente
         double dist = distance(vertex, center);
+
+        // Se la distanza calcolata è maggiore del raggio attuale, allora il raggio attuale
+        // viene aggiornato con questa nuova distanza (fino ad ottenere il raggio massimo)
         if (dist > radius)
         {
-            double newRadius = (radius + dist) / 2.0;
-            // Fattore di scala: è un fattore che serve per determinare l'espansione uniforme della sfera il cui centro
-            // deve spostarsi in relazione al vertice più distante. Viene utilizzato per aggiornare iterativamente
-            // la posizione del centroide della Bounding Sphere
-            double scaleFactor = (newRadius - radius) / dist;
-
-            center = (1 - scaleFactor) * center + scaleFactor * vertex;
-            radius = newRadius;
+            radius = dist;
         }
     }
 
@@ -150,6 +127,7 @@ BoundingSphere computeBoundingSphere(const vector<Vector3d>& vertices)
 }
 
 
+// Definizione di una funzione che verifica se 2 tracce effettivamente si intersecano
 bool proximityOfFractures(BoundingSphere& sphere1, BoundingSphere& sphere2, const double radiusTolerance)
 {
     double distBetweenCenters = distance(sphere1.center, sphere2.center);
@@ -167,6 +145,7 @@ bool proximityOfFractures(BoundingSphere& sphere1, BoundingSphere& sphere2, cons
     }
 }
 
+
 // Definizione del vettore normale, ovvero un vettore perpendicolare alla superficie della frattura
 Vector3d normal(const vector<Vector3d>& fracture)
 {
@@ -179,11 +158,11 @@ Vector3d normal(const vector<Vector3d>& fracture)
 
     Vector3d crossProd = (u.cross(v));      // Calcolo del prodotto vettoriale tra il vettore u e v
     Vector3d n = crossProd.normalized();
-    // Il prodotto vettoriale deve essere normalizzato, al fine di ottenere il vettore normale al poligono
+    // Il prodotto vettoriale deve essere normalizzato, al fine di ottenere il vettore unitario
+    // perpendicolare (normale) al poligono
 
     return n;
 }
-
 
 
 // Definizione della funzione per calcolare l'area di un triangolo dati i vertici
@@ -202,6 +181,7 @@ double calculateTriangleArea(const Vector3d& A, const Vector3d& B, const Vector3
     return area;
 }
 
+
 // Definizione di una funzione che verifica se un punto è interno o meno ad un triangolo
 bool isPointInTriangle(const Vector3d& P, const Vector3d& A, const Vector3d& B, const Vector3d& C)
 {
@@ -216,7 +196,7 @@ bool isPointInTriangle(const Vector3d& P, const Vector3d& A, const Vector3d& B, 
 
     // Il punto è considerato interno al triangolo se la differenza tra la somma totale delle aree e l'area di ABC
     // è inferiore alla tolleranza scelta
-    if(abs(sumAreas - areaABC) < machineEpsilon)
+    if(abs(sumAreas - areaABC) < defaultTolerance)
     {
         return true;
     }
@@ -226,6 +206,7 @@ bool isPointInTriangle(const Vector3d& P, const Vector3d& A, const Vector3d& B, 
     }
 }
 
+
 // Definizione di una funzione che verifica se un punto è interno o meno a una frattura (ovvero un poligono)
 // utilizzando la triangolazione, nel dettaglio la scomposizione in triangoli della frattura
 // Si ricorda che un poligono con n vertici può essere suddiviso in "n-2" triangoli
@@ -234,7 +215,7 @@ bool isPointInFracture(const Vector3d& P, vector<Vector3d>& fractureVertices)
     for (unsigned int i = 1; i < fractureVertices.size()-1; ++i)
     {
     // Il primo vertice viene utilizzato come vertice fisso per originare i triangoli
-	// Gli argomenti sono: Punto, Primo Vertice, Secondo Vertice, Terzo Vertice
+    // Gli elementi di isPointInTriangle sono: Punto, Primo Vertice, Secondo Vertice, Terzo Vertice
 	if (isPointInTriangle(P, fractureVertices[0], fractureVertices[i], fractureVertices[i+1]))
         {
             return true;
@@ -242,7 +223,6 @@ bool isPointInFracture(const Vector3d& P, vector<Vector3d>& fractureVertices)
     }
     return false;
 }
-
 
 
 VectorXd solveWithDecompositionPALU(const MatrixXd& matrixA, const VectorXd& columnVector)
@@ -259,10 +239,12 @@ VectorXd solveWithDecompositionQR(const MatrixXd& matrixA, const VectorXd& colum
 
 }
 
+
 // Definizione di una funzione per definire tutti i parametri di una traccia
 void definitionOfTraces(strFractures& frac, strTraces& trac)
 {
-    unsigned int count = 0;		// Inizializzazione di un contatore a zero
+    // Inizializzazione di un contatore a zero, per tenere in considerazione le tracce create
+    unsigned int count = 0;
 
     // Utilizzando la struct BoundingSphere, si crea un vettore che viene inizializzato con dimensione pari
     // al numero delle fratture
@@ -284,12 +266,15 @@ void definitionOfTraces(strFractures& frac, strTraces& trac)
                 // Definizione della matrice A e del vettore colonna b, per la risoluzione del sistema lineare
                 // al fine di trovare l'intersezione delle 2 fratture, dati 2 piani passanti per esse
                 
-                // Definizione delle mappe di Gauss (versori normali) delle 2 fratture
+                // Definizione della normale alla prima frattura
                 Vector3d n1 = normal(frac.VerticesOfFractures[i]);
+                // Definizione della normale alla seconda frattura
                 Vector3d n2 = normal(frac.VerticesOfFractures[j]);
+                // Definizione del prodotto vettoriale tra la normale della prima frattura e la normale della seconda
                 Vector3d t = n1.cross(n2);
                 
-                Matrix3d A;	// Matrice dove n1 è contenuto 1a riga, n2 nella 2a riga e infine t nella 3a riga
+                // Matrice QUADRATA dove n1 è contenuto nella 1a riga, n2 nella 2a riga e infine t nella 3a riga
+                Matrix3d A;
                 A.row(0) = n1.transpose();
                 A.row(1) = n2.transpose();
                 A.row(2) = t.transpose();
@@ -298,61 +283,73 @@ void definitionOfTraces(strFractures& frac, strTraces& trac)
                 double b2 = n2.transpose() * boundingSpheres[j].center;
                 Vector3d b = {b1, b2, 0};
 
-                // Se si verifica questa condizione, ovvero che il determinante è pari a 0, dove zero viene
-                // approssimato alla tolleranza di default, e ciò implica che t,n1 e n2 siano complanari, il sistema
-                // non ammette soluzione e di conseguenza non avviene l'intersezione
-                // Complanarità: si verifica quando il prodotto misto è pari a 0, ovvero t*(n1xn2). Non viene indicata nella seguente condizione IF,
-                // in qanto è sufficiente la condizione sul determinante
+                // Se il determinante è prossimo a 0, xiò indica che i piani delle fratture
+                // sono paralleli (o quasi paralleli) e quindi NON si verifica intersezione
 
                 if (A.determinant() < machineEpsilon)
                 {
+                    // Tale coppia di fratture NON viene quindi presa in considerazione
+                    // e si passa alla coppia di fratture successiva
                     continue;
                 }
 
+                // Risoluzione del sistema lineare con la decomposizione PA LU,
+                // in quanto A è una matrice quadrata NON singolare
+                // DEFINIZIONE: Una matrice quadrata A è NON singolare se det(A) è diverso da 0
                 Vector3d extrTrace = solveWithDecompositionPALU(A,b);
 
                 unsigned int NumOfExtremes = 0;	   // Inizializzazione di un contatore per il numero di estremi trovati
-                array<Vector3d, 2> extremes;	   // Definizione di unArray per memorizzare gli estremi della traccia
+                array<Vector3d, 2> extremes;	   // Definizione di un Array per memorizzare gli estremi della traccia
 
-                // Ciclo FOR che serve per eseguire i controlli sulla prima frattura. E' un ciclo che itera sui vertici
+                // Ciclo FOR per la prima frattura. E' un ciclo che itera sui vertici
                 // della prima frattura al fine di trovare gli estremi che definiscono la traccia di intersezione
                 for (unsigned int k = 0; k < frac.NumberOfVertices[i]; k++)
                 {
-                    // Con extr1 ed extr2 vengono indicati 2 estremi consecutivi della frattura
+                    // Con extr1 ed extr2 vengono indicati 2 estremi consecutivi della frattura i
                     Vector3d extr1 = frac.VerticesOfFractures[i][k];
                     Vector3d extr2 = frac.VerticesOfFractures[i][(k + 1) % frac.NumberOfVertices[i]];
 
+                    // Definizione di una matrice RETTANGOLARE di 3 righe e 2 colonne
                     MatrixXd Ainters(3, 2);
+
+                    // Indica il vettore direzionale del lato corrente della frattura i
                     Ainters.col(0) = (extr2 - extr1);
+                    // Indica il vettore tangente, necessario per determinare l'intersezione
                     Ainters.col(1) = t;
 
-                    // Se si verifica questa condizione, ovvero che il prodotto vettoriale tra il vettore direzionale della frattura 
-                    // e il vettore tangente t è prossimo a 0 (quindi il vettore direzionale e t sono paralleli),
-                    // vuol dire che non viene creata un'intersezione
+                    // Se il prodotto vettoriale tra il vettore direzionale e t è prossimo a zero,
+                    // i vettori sono paralleli e non c'è intersezione
                     if ((extr2 - extr1).cross(t).squaredNorm() < machineEpsilon)
                     {
+                        // Tale lato NON viene preso in considerazione e si passa al lato successivo
                         continue;
                     }
 
-                    // Rappresenta la differenza tra il punto di intersezione extrTrace e uno degli estremi extr1
+                    // Indica la differenza tra il punto di intersezione extrTrace ed extr1
                     Vector3d bInters = (extrTrace - extr1);
 
+                    // Risoluzione del sistema lineare con la decomposizione QR,
+                    // in quanto Ainters è una matrice RETTANGOLARE SOVRADETERMINATA
+                    // Trova i parametri per determinare il punto di intersezione sul lato della frattura i
                     Vector2d xSolution = solveWithDecompositionQR(Ainters, bInters);
+
                     // Il valore di alfa deve appartenere all'intervallo [0 - defTol, 1 + defTol]
                     if (xSolution[0] > (0 - machineEpsilon) && xSolution[0] < (1 + machineEpsilon) && NumOfExtremes < 2)
                     {
-                        // Vettore 3d che calcola il punto di intersezione
+                        // Vettore 3d che determina le coordinate esatte del punto di intersezione
                         Vector3d pointIntersec = extr1 + (xSolution[0] * (extr2 - extr1));
-                        // Verifica se il punto pointIntersec, di intersezione, si trova all'interno della frattura j
+
+                        // Verifica se non è stato trovato alcun estremo e se il punto di intersezione
+                        // si trova all'interno della frattura j
+                        // In questo modo è assicurato che l'intersezione sia valida per entrambe le fratture
                         if (NumOfExtremes == 0 && isPointInFracture(pointIntersec, frac.VerticesOfFractures[j]))
                         {
-                            // Si verifica l'aggiunta del punto di intersezione a extremes
+                            // Il punto di intersezione viene aggiunto agli estremi (variabile extremes)
                             extremes[NumOfExtremes] = pointIntersec;
                             NumOfExtremes += 1;
                         }
-                        // Verifica se il punto di intersezione è diverso dal primo e dentro la frattura j
-                        // NumOfExtremes == 1: verifica se è già stato trovato il primo estremo
-                        // extremes[0] != pointIntersec: verifica se il punto di intersezione non è lo stesso del primo estremo
+                        // Verifica se il secondo estremo è valido e diverso dal primo, e se si
+                        // trova all'interno della frattura j
                         else if (NumOfExtremes == 1 && isPointInFracture(pointIntersec, frac.VerticesOfFractures[j]) && extremes[0] != pointIntersec)
                         {
                             // In tal modo, viene registrata una nuova traccia che collega le fratture coinvolte i e j
@@ -368,55 +365,80 @@ void definitionOfTraces(strFractures& frac, strTraces& trac)
                     }
                 }
 
-                // Ciclo FOR che serve per eseguire i controlli sulla seconda frattura. E' un ciclo che itera sui vertici
+                // Ciclo FOR per la seconda frattura. E' un ciclo che itera sui vertici
                 // della seconda frattura al fine di trovare gli estremi che definiscono la traccia di intersezione
                 for (unsigned int k = 0; k < frac.NumberOfVertices[j]; k++)
                 {
-                    // Con extr1 ed extr2 vengono indicati 2 estremi consecutivi della frattura
+                    // Con extr1 ed extr2 vengono indicati 2 estremi consecutivi della frattura j
                     Vector3d extr1 = frac.VerticesOfFractures[j][k];
                     Vector3d extr2 = frac.VerticesOfFractures[j][(k + 1) % frac.NumberOfVertices[j]];
 
+                    // Definizione di una matrice RETTANGOLARE di 3 righe e 2 colonne
                     MatrixXd Ainters(3, 2);
+
+                    // Indica il vettore direzionale del lato corrente della frattura j
                     Ainters.col(0) = (extr2 - extr1);
+                    // Indica il vettore tangente, necessario per determinare l'intersezione
                     Ainters.col(1) = t;
 
-                    // Se si verifica questa condizione, ovvero che il prodotto vettoriale tra il vettore direzionale della frattura 
-                    // e il vettore tangente t è prossimo a 0 (quindi il vettore direzionale e t sono paralleli),
-                    // vuol dire che non viene creata un'intersezione
+                    // Se il prodotto vettoriale tra il vettore direzionale e t è prossimo a zero,
+                    // i vettori sono paralleli e non c'è intersezione
                     if ((extr2 - extr1).cross(t).squaredNorm() < machineEpsilon)
                     {
+                        // Tale lato NON viene preso in considerazione e si passa al lato successivo
                         continue;
                     }
 
-                    // Rappresenta la differenza tra il punto di intersezione extrTrace e uno degli estremi extr1
+                    // Indica la differenza tra il punto di intersezione extrTrace ed extr1
                     Vector3d bInters = (extrTrace - extr1);
 
+                    // Risoluzione del sistema lineare con la decomposizione QR,
+                    // in quanto Ainters è una matrice RETTANGOLARE SOVRADETERMINATA
+                    // Trova i parametri per determinare il punto di intersezione sul lato della frattura j
                     Vector2d xSolution = solveWithDecompositionQR(Ainters, bInters);
+
                     // Il valore di alfa deve appartenere all'intervallo [0 - defTol, 1 + defTol]
+                    // In questo modo, il punto di intersezione si trova effettivamente tra extr1 e extr2
                     if (xSolution[0] > (0 - machineEpsilon) && xSolution[0] < (1 + machineEpsilon) && NumOfExtremes < 2)
                     {
-                        // Vettore 3d che calcola il punto di intersezione
-                        Vector3d pointIntersec = extr1 + (xSolution[0] * (extr2 - extr1));
-                        // Verifica se il punto pointIntersec, di intersezione, si trova all'interno della frattura j
+                        // Vettore 3d che determina le coordinate esatte del punto di intersezione
+                        Vector3d pointIntersec = extr1 + (xSolution[0] * (extr2 - extr1));     
+
+                        // Verifica se non è stato trovato alcun estremo e se il punto di intersezione
+                        // si trova all'interno della frattura i
+                        // In questo modo è assicurato che l'intersezione sia valida per entrambe le fratture
                         if (NumOfExtremes == 0 && isPointInFracture(pointIntersec, frac.VerticesOfFractures[i]))
                         {
-                            // Si verifica l'aggiunta del punto di intersezione a extremes
+                            // Il primo punto di intersezione viene aggiunto agli estremi, in extremes[0]
                             extremes[NumOfExtremes] = pointIntersec;
                             NumOfExtremes += 1;
                         }
-                        // Verifica se il punto di intersezione è diverso dal primo e dentro la frattura j
-                        // NumOfExtremes == 1: verifica se è già stato trovato il primo estremo
-                        // extremes[0] != pointIntersec: verifica se il punto di intersezione non è lo stesso del primo estremo
+                        // Verifica se il secondo estremo è valido e diverso dal primo, e se si
+                        // trova all'interno della frattura i
                         else if (NumOfExtremes == 1 && isPointInFracture(pointIntersec, frac.VerticesOfFractures[i]) && extremes[0] != pointIntersec)
                         {
-                            // In tal modo, viene registrata una nuova traccia che collega le fratture coinvolte i e j
+                            // In tal modo, viene registrata una nuova traccia
+
+                            // Il secondo punto di intersezione viene aggiunto agli estremi, in extremes[1]
                             extremes[NumOfExtremes] = pointIntersec;
                             NumOfExtremes += 1;
+
+                            // Aggiornamento il numero totale di tracce trovate
                             trac.NumberOfTraces += 1;
+
+                            // Aggiunge l'id della nuova traccia a TraceId
                             trac.TraceId.push_back(count);
+
+                            // Creazione di una coppia di id delle fratture che identificano la traccia
                             Vector2i idFracturesTrace = {frac.FractureId[i], frac.FractureId[j]};
+
+                            // Aggiunge la coppia di id a FractureIds
                             trac.FractureIds.push_back(idFracturesTrace);
+
+                            // Aggiunge gli estremi della traccia alla posizione count di VerticesOfTraces
                             trac.VerticesOfTraces[count] = extremes;
+
+                            // Incremento del contatore
                             count += 1;
                         }
                     }
@@ -427,12 +449,11 @@ void definitionOfTraces(strFractures& frac, strTraces& trac)
 }
 
 
-
 // Definizione di una funzione che verifica se un punto si trova su un segmento
 bool isPointInSegment(const Vector3d& point, const Vector3d& p1, const Vector3d& p2)
 {
-    Vector3d v1 = point - p1;
-    Vector3d v2 = p2 - p1;
+    Vector3d v2 = point - p1;
+    Vector3d v1 = p2 - p1;
     double crossProduct = v1.cross(v2).norm();
 
     // Se si verifica tale condizione, significa che il punto non è esattamente sul segmento
@@ -441,90 +462,92 @@ bool isPointInSegment(const Vector3d& point, const Vector3d& p1, const Vector3d&
         return false;
     }
 
-    double dotProduct = v1.dot(v2);
+    double dotProduct = v2.dot(v1);
+    double squaredLength = v1.dot(v1);
 
     // Se si verifica almeno una delle 2 condizioni, allora il punto non appartiene al segmento
     // Prima condizione: il prodotto scalare è negativo, quindi il punto è prima di p1
     // Seconda condizione: il prodotto scalare è maggiore della distanza tra p1 e p2, quindi il punto è dopo p2
-    if (dotProduct < 0 || dotProduct > v2.squaredNorm())
+    if (dotProduct < 0 || dotProduct > squaredLength)
     {
         return false;
     }
-
     return true;
 }
+
 
 // Definizione di una funzione che calcola la tipologia della traccia, passante o non passante
 void computeTypeTrace(const strFractures& fractures, strTraces& traces)
 {
-    // Ciclo FOR principale, che itera su tutte le tracce presenti in traces
+    // La dimensione del vettore Tips viene modificata al fine di contenere
+    // traces.NumberOfTraces elementi
+    traces.Tips.resize(traces.NumberOfTraces);
+
     for (unsigned int i = 0; i < traces.NumberOfTraces; ++i)
     {
-        // Estrae le estremità iniziale e finale della traccia corrente
+        // Definizione dei 2 estremi della traccia
         const Vector3d& traceStart = traces.VerticesOfTraces.at(i)[0];
         const Vector3d& traceEnd = traces.VerticesOfTraces.at(i)[1];
 
-        // Variabile booleana che indica se la traccia è passante (false) o non passante (true)
-        bool Tips = true;  // Si assume inizialmente che la traccia sia non passante
+        // Identificazione delle 2 fratture che formano la traccia
+        const Vector2i& fracturePair = traces.FractureIds.at(i);
 
-        // Ciclo FOR che itera su tutte le frattura
-        for (unsigned int k = 0; k < fractures.NumberOfFractures; ++k)
+        // Inizializzazione l'array di booleani per questa traccia
+        array<bool, 2> currentTips = {true, true};
+
+        // Controllo per entrambe le fratture nel fracturePair
+        for (unsigned int j = 0; j < 2; ++j)
         {
-            // Variabile per verificare se gli estremi sono su lati diversi della frattura
-            bool foundDifferentSides = false;
+            unsigned int fractureIndex = fracturePair[j];
+            // Variabile booleana per determinare se i 2 estremi della traccia si trovano
+            // su lati differenti della frattura
             bool endsOnDifferentSides = false;
 
-            // Itera su tutti i lati della frattura corrente, tenendo in considerazione i vertici
-            for (unsigned int l = 0; l < fractures.NumberOfVertices.at(k); ++l)
+            // Controllo per ogni lato della frattura
+            for (unsigned int l = 0; l < fractures.NumberOfVertices[fractureIndex]; ++l)
             {
-                // Estrae i vertici di un lato della frattura
-                Vector3d p1F = fractures.VerticesOfFractures.at(k).at(l);
-                Vector3d p2F = fractures.VerticesOfFractures.at(k).at((l + 1) % fractures.NumberOfVertices.at(k));
+                // Definizione dei vertici per il primo lato
+                const Vector3d& p1F = fractures.VerticesOfFractures.at(fractureIndex)[l];
+                const Vector3d& p2F = fractures.VerticesOfFractures.at(fractureIndex)[(l + 1) % fractures.NumberOfVertices[fractureIndex]];
 
-                // Verifica se traceStart si trova su questo lato della frattura
                 if (isPointInSegment(traceStart, p1F, p2F))
                 {
-                    // Indicatore che serve per iterare sui lati successivi fino alla fine dei vertici della frattura
-                    unsigned int m = (l + 1) % fractures.NumberOfVertices.at(k);
+                    unsigned int m = (l + 1) % fractures.NumberOfVertices[fractureIndex];
 
+                    // Il ciclo WHILE viene eseguito finchè m non ritorna al punto iniziale l
                     while (m != l)
                     {
-                        // Estrae i vertici del lato successivo della frattura
-                        Vector3d next_p1F = fractures.VerticesOfFractures.at(k).at(m);
-                        Vector3d next_p2F = fractures.VerticesOfFractures.at(k).at((m + 1) % fractures.NumberOfVertices.at(k));
+                        // Definizione dei vertici per il secondo lato
+                        const Vector3d& next_p1F = fractures.VerticesOfFractures.at(fractureIndex)[m];
+                        const Vector3d& next_p2F = fractures.VerticesOfFractures.at(fractureIndex)[(m + 1) % fractures.NumberOfVertices[fractureIndex]];
 
-                        // Verifica se traceEnd si trova sul lato successivo e non sul lato di traceStart
-                        if (isPointInSegment(traceEnd, next_p1F, next_p2F) && !isPointInSegment(traceEnd, p1F, p2F))
+                        // Se il secondo vertice della traccia si trova su un lato differente,
+                        // allora la variabile endsOnDifferentSide assume valore "true"
+                        if (isPointInSegment(traceEnd, next_p1F, next_p2F))
                         {
                             endsOnDifferentSides = true;
                             break;
                         }
 
-                        m = (m + 1) % fractures.NumberOfVertices.at(k);  // Viene eseguito il controllo sul lato successivo
+                        // Aggiornamento dell'indice m per passare al prossimo lato del poligono
+                        m = (m + 1) % fractures.NumberOfVertices[fractureIndex];
                     }
 
-                    // Se entrambi gli estremi si trovano su lati diversi della frattura, la traccia è passante
+                    // Se la condizione è vera (endsOnDifferentSides assume valore "true"),
+                    // allora l'elemento corrispondente di currentTips viene impostato a false
                     if (endsOnDifferentSides)
                     {
-                        foundDifferentSides = true;
+                        currentTips[j] = false;
                         break;
                     }
                 }
             }
-
-            // Se i due estremi della traccia sono su lati diversi della frattura, la traccia è passante
-            if (foundDifferentSides)
-            {
-                Tips = false;
-                break;
-            }
         }
 
-        // Il valore di Tips ottenuto viene aggiunto alla lista
-        traces.Tips.push_back(Tips);
+        // Il risultato viene aggiunto a vector<array<bool,2>> Tips
+        traces.Tips[i] = currentTips;
     }
 }
-
 
 
 // Definizione di una funzione per calcolare la lunghezza della traccia
@@ -532,85 +555,102 @@ void lengthTraces(strTraces& traces)
 {
     for (unsigned int i = 0; i < traces.NumberOfTraces; ++i)
     {
+        // Definizione dei 2 estremi consecutivi della traccia
         const Vector3d& traceStart = traces.VerticesOfTraces[i][0];
         const Vector3d& traceEnd = traces.VerticesOfTraces[i][1];
 
-        // Dati gli estremi della traccia, viene calcolata la loro lunghezza
+        // Forniti gli estremi della traccia, viene calcolata la loro lunghezza tramite
+        // la funzione "distance" definita precedentemente
         double length = distance(traceEnd, traceStart);
+
         traces.TraceLength.push_back(length);
     }
+
 }
 
 
-
-// Definizione di una funzione per ordinare le tracce secondo l'algoritmo Merge Sort
+// Definizione di una funzione per ordinare le tracce
 void orderTraces(strTraces& traces)
 {
-    vector<pair<double, unsigned int>> passing;
-    vector<pair<double, unsigned int>> notPassing;
-
-    // Popola vettori passante e nonPassante
+    // Inserimento delle tracce nella categoria passing e notPassing
     for (unsigned int i = 0; i < traces.NumberOfTraces; ++i)
     {
-        // Se il valore i di Tips + False, la traccia è passante. Altrimenti la traccia è non passante
-        if (traces.Tips[i] == false)
+        const auto& tips = traces.Tips[i];
+        const auto& length = traces.TraceLength[i];
+
+        // CASO 1: la traccia è PASSANTE per entrambe le fratture
+        if (tips[0] == false && tips[1] == false)
         {
-            passing.push_back({traces.TraceLength[i], i });
+            traces.passing.emplace_back(length, i);
+        }
+        // CASO 2: la traccia è NON PASSANTE per entrambe le fratture
+        else if (tips[0] == true && tips[1] == true)
+        {
+            traces.notPassing.emplace_back(length, i);
         }
         else
         {
-            notPassing.push_back({traces.TraceLength[i], i });
+            // CASO 3: la traccia è PASSANTE o NON PASSANTE per la prima frattura
+            if (tips[0] == false)
+            {
+                traces.passing.emplace_back(length, i);
+            } else
+            {
+                traces.notPassing.emplace_back(length, i);
+            }
+            // CASO 4: la traccia è PASSANTE o NON PASSANTE per la seconda frattura
+            if (tips[1] == false)
+            {
+                traces.passing.emplace_back(length, i);
+            } else
+            {
+                traces.notPassing.emplace_back(length, i);
+            }
         }
     }
 
-    // Ordina vettori per lunghezza decrescente
-    SortLibrary::MergeSort(passing);
-    SortLibrary::MergeSort(notPassing);
-
-    // Strutture che servono per ricostruire le tracce ordinate secondo Merge Sort
-    vector<unsigned int> orderedTraceId;
-    vector<Vector2i> orderedFractureIds;
-    map<unsigned int, array<Vector3d, 2>> orderedVerticesOfTraces;
-    vector<bool> orderedTips;
-    vector<double> orderedLengths;
-
-
-    // Inserimento delle strutture nella tipologia Passante
-    for (const auto& trace : passing)
+    // DEBUG: Stampa dei vettori non ordinati
+    cout << "NON ordinato - Passing: \n";
+    for (const auto& trace : traces.passing)
     {
-        unsigned int idx = trace.second;
-        orderedFractureIds.push_back(traces.FractureIds[idx]);
-        orderedVerticesOfTraces[idx] = traces.VerticesOfTraces[idx];
-        orderedTips.push_back(traces.Tips[idx]);
-        orderedLengths.push_back(traces.TraceLength[idx]);
-        orderedTraceId.push_back(traces.TraceId[idx]);
+        cout << "{Length: " << trace.first << ", Idx: " << trace.second << "} \n";
+    }
+    cout << endl;
+
+    cout << "NON ordinato - NotPassing: \n";
+    for (const auto& trace : traces.notPassing)
+    {
+        cout << "{Length: " << trace.first << ", Idx: " << trace.second << "} \n";
+    }
+    cout << endl;
+
+
+
+    // Ordina i vettori in base alla lunghezza decrescente, solo se i passing e notPassing contengono alemno 1 elemento
+    if(traces.passing.size() > 0)
+    {
+        SortLibrary::MergeSort(traces.passing);
+    }
+    if(traces.notPassing.size() > 0)
+    {
+        SortLibrary::MergeSort(traces.notPassing);
     }
 
-    // Inserimento delle strutture nella tipologia Non Passante
-    for (const auto& trace : notPassing)
+
+    // DEBUG: Stampa dei vettori ordinati
+    cout << "Ordinato - Passing: \n";
+    for (const auto& trace : traces.passing)
     {
-        unsigned int idx = trace.second;
-        orderedFractureIds.push_back(traces.FractureIds[idx]);
-        orderedVerticesOfTraces[idx] = traces.VerticesOfTraces[idx];
-        orderedTips.push_back(traces.Tips[idx]);
-        orderedLengths.push_back(traces.TraceLength[idx]);
-        orderedTraceId.push_back(traces.TraceId[idx]);
+        cout << "{Length: " << trace.first << ", Idx: " << trace.second << "} \n";
     }
+    cout << endl;
 
-    // Aggiornamento della struttura con i vettori ordinati
-    traces.FractureIds = orderedFractureIds;
-
-    // Pulizia e aggiornamento di VerticesOfTraces
-    traces.VerticesOfTraces.clear();
-    for (const auto& pair : orderedVerticesOfTraces)
+    cout << "Ordinato - NotPassing: \n";
+    for (const auto& trace : traces.notPassing)
     {
-        traces.VerticesOfTraces[pair.first] = pair.second;
+        cout << "{Length: " << trace.first << ", Idx: " << trace.second << "} \n";
     }
-
-    traces.TraceId = orderedTraceId;
-    traces.Tips = orderedTips;
-    traces.TraceLength = orderedLengths;
+    cout << endl;
 }
-
 
 
