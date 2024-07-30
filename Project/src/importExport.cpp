@@ -23,6 +23,7 @@ bool importListFractures(strFractures& fractures, const string& inputFilePath)
 {
     ifstream file;
     file.open(inputFilePath);
+
     if(file.fail())
     {
         cerr << "ATTENTION: IMPORT of data from file " << inputFilePath << " goes wrong!" << endl;
@@ -30,66 +31,72 @@ bool importListFractures(strFractures& fractures, const string& inputFilePath)
     }
 
     string line;
-
-    getline(file, line);                // Legge la riga # Number of Fractures
+    getline(file, line);        // Legge la riga # Number of Fractures
     getline(file, line);
 
-    // Conversione della riga in un elemento "unsigned int"
-    istringstream convIntoNumFrac(line);
-    unsigned int NumOfFractures;
-    convIntoNumFrac >> NumOfFractures;
+    // Conversione del contenuto della variabile line (stringa) in un intero senza segno e lo assegna a NumFrac
+    unsigned int NumFrac = 0;
+    NumFrac = stoi(line);
 
-    // Avviene il ridimensionamento di FracturesId e NumberOfVertices
-    fractures.NumberOfFractures = NumOfFractures;
-    fractures.FractureId.resize(fractures.NumberOfFractures);
-    fractures.NumberOfVertices.resize(fractures.NumberOfFractures);
+    unsigned int FracId = 0;
+    // Definizione del delimitatore, che in questo caso è ;
+    char del = ';';
+    unsigned int NumVert = 0;
 
+    // Avviene il ridimensionamento basato su NumFrac per ogni variabile delle fratture
+    fractures.NumberOfFractures = NumFrac;
+    fractures.FractureId.resize(NumFrac);
+    fractures.NumberOfVertices.resize(NumFrac);
+    fractures.VerticesOfFractures.resize(NumFrac);
 
-    for(unsigned int i = 0; i < NumOfFractures; i++)
+    for(unsigned int i = 0; i < NumFrac; i++)
     {
-        getline(file, line);            // Legge la riga # FractureId; NumVertices
+        getline(file, line);        // Legge le righe # FractureId; NumVertices
 
         getline(file, line);
-        istringstream convert(line);
 
-        char del1;
-        unsigned int FracId;
-        unsigned int numOfVertices;
+        // Consversione dei dati della riga in variabili FracId e NumVert, separati da "del"
+        istringstream converter(line);
+        converter >> FracId >> del >> NumVert;
 
-        convert >> FracId >> del1 >> numOfVertices;
-        getline(file, line);
+        // DEBUG per verificare se gli Id e il numero delle fratture sono stati importati correttamente
+        cout << "Fracture ID: " << FracId << ", Number of vertices: " << NumVert << endl;
 
+        // Memorizzazione dell'id e del numero di vertici per la frattura corrente
         fractures.FractureId[i] = FracId;
-        fractures.NumberOfVertices[i] = numOfVertices;
+        fractures.NumberOfVertices[i] = NumVert;
+        // Ridimensionamento del vettore di vertici per la frattura corrente, in base a NumVert
+        fractures.VerticesOfFractures[i].resize(NumVert);
 
-        // Debug di output per verificare se gli Id e il numero delle fratture sono stati importati correttamente
-        cerr << "Fracture ID: " << FracId << ", Number of vertices: " << numOfVertices << endl;
+        getline(file, line);        // Legge le righe # Vertices
 
-        // Creazione di un vettore di coordinate 3d per i vertici della frattura
-        vector<Vector3d> FracVert(numOfVertices);
-
-        // Estrazione dei valori delle coordinate e inserimento all'interno di un Vector3d
-        getline(file, line);
-        istringstream firstCoordinate(line);
-        getline(file, line);
-        istringstream secondCoordinate(line);
-        getline(file, line);
-        istringstream thirdCoordinate(line);
-
-        double xCoord, yCoord, zCoord;
-        char del2;
-
-        // Ciclo FOR che, per ogni vertice, stampa le relative coordinate in 3d
-        for (unsigned int k = 0; k < numOfVertices; k++)
+        // Ciclo FOR per la lettura delle coordinate 3d dei vertici
+        for(unsigned int k = 0; k < 3; k++)
         {
-            firstCoordinate  >> xCoord >> del2;
-            secondCoordinate >> yCoord >> del2;
-            thirdCoordinate  >> zCoord >> del2;
+            getline(file, line);
+            istringstream converter(line);
 
-            FracVert[k] = Vector3d(xCoord, yCoord, zCoord);
+            // Ciclo FOR che itera per tutti i vertici
+            for(unsigned int j = 0; j < NumVert; j++)
+            {
+                double coordinates;
+                // Estrazione del valore della coordinata
+                converter >> coordinates >> del;
+
+                if(k == 0)      // CASO coordinata x
+                {
+                    fractures.VerticesOfFractures[i][j].x() = coordinates;
+                }
+                else if (k==1)  // CASO coordinata y
+                {
+                    fractures.VerticesOfFractures[i][j].y() = coordinates;
+                }
+                else            // CASO coordinata z
+                {
+                    fractures.VerticesOfFractures[i][j].z() = coordinates;
+                }
+            }
         }
-
-        fractures.VerticesOfFractures[FracId] = FracVert;
     }
 
     file.close();

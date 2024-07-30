@@ -33,7 +33,7 @@ int main()
 
 
     // IMPORT del file contenente le infomazioni sulle fratture
-    string fileInput = "./DFN/FR362_data.txt";
+    string fileInput = "./DFN/FR200_data.txt";
 
     if(!importListFractures(fractures, fileInput))
     {
@@ -65,7 +65,7 @@ int main()
 
 
     // EXPORT del file contenente le informazioni sulle tracce
-    string outputTraceInfo = "./Traces_Info_FR362.txt";
+    string outputTraceInfo = "./Traces_Info_FR200.txt";
 
     if(!generateTracesInfo(traces, outputTraceInfo))
     {
@@ -74,7 +74,7 @@ int main()
 
 
     // EXPORT del file contenente le tipologie delle tracce
-    string outputTraceTips = "./Traces_Tips_FR362.txt";
+    string outputTraceTips = "./Traces_Tips_FR200.txt";
 
     computeTypeTrace(fractures, traces);
     lengthTraces(traces);

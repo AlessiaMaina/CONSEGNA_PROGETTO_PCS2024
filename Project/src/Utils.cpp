@@ -30,19 +30,32 @@ const double machineEpsilon = numeric_limits<double>::epsilon();
 const double defaultTolerance = pow(10,-10);
 
 
+double distance(const Vector3d& a, const Vector3d& b)
+{
+    double distAB = (a - b).norm();
+    return distAB;
+}
+
+
+
 // TEST 1: Verificare nella frattura la presenza di lati tutti diversi da zero
 bool testEdgesOfFracture(const strFractures& fractures)
 {
-    for (const auto& fracture : fractures.VerticesOfFractures)
+    // Itera attraverso ogni frattura nel vettore di fratture
+    for (const vector<Vector3d>& fracture : fractures.VerticesOfFractures)
     {
-        const auto& vertices = fracture.second;
-        for (size_t i = 0; i < vertices.size() - 1; ++i)
+        const size_t vertexCount = fracture.size();
+
+        // Itera attraverso i vertici della frattura
+        for (size_t i = 0; i < vertexCount - 1; ++i)
         {
-            Vector3d v_Start = vertices[i];
-            Vector3d v_End = vertices[i + 1];
-            if ((v_End - v_Start).norm() <= machineEpsilon)         // La norma della differenza tra i 2 vertici NON deve essere minore o uguale alla tolleranza
+            const Vector3d& v_Start = fracture[i];
+            const Vector3d& v_End = fracture[i + 1];
+
+            // Controlla la distanza tra i due vertici è minore o uguale della tolleranza
+            if (distance(v_End, v_Start) <= machineEpsilon)
             {
-                cerr << "ATTENTION: Fracture has sides of zero lenght. This is impossible! " << endl;
+                cerr << "ATTENTION: Fracture has sides of zero length. This is impossible!" << endl;
                 return false;
             }
         }
@@ -55,15 +68,17 @@ bool testEdgesOfFracture(const strFractures& fractures)
 // TEST 2: Verificare nella frattura che sono presenti almeno 3 vertici, altrimenti la frattura NON è definita
 bool testVerticesOfFracture(const strFractures& fractures)
 {
-    for (const auto& fracture : fractures.VerticesOfFractures)
+    for (const vector<Vector3d>& fracture : fractures.VerticesOfFractures)
     {
-        size_t numberOfVertices = fracture.second.size();
+        size_t numberOfVertices = fracture.size();
+
+        // Verifica se il numero di vertici è inferiore a 3
         if (numberOfVertices < 3)
         {
             cerr << "ATTENTION: Fracture has less than 3 vertices and is undefined. This is impossible!" << endl;
+            return false;
         }
     }
-
     return true;
 }
 
@@ -76,13 +91,6 @@ bool areVectorsEqual(const Vector3d& v1, const Vector3d& v2)
         return true;
     }
     return false;
-}
-
-
-double distance(const Vector3d& a, const Vector3d& b)
-{
-    double distAB = (a - b).norm();
-    return distAB;
 }
 
 
@@ -225,6 +233,7 @@ bool isPointInFracture(const Vector3d& P, vector<Vector3d>& fractureVertices)
 }
 
 
+// Definizione della tecnica di decomposizione PA LU
 VectorXd solveWithDecompositionPALU(const MatrixXd& matrixA, const VectorXd& columnVector)
 {
     VectorXd solutionWithPALU = matrixA.partialPivLu().solve(columnVector);
@@ -232,6 +241,7 @@ VectorXd solveWithDecompositionPALU(const MatrixXd& matrixA, const VectorXd& col
 
 }
 
+// Definizione della tecnica di decomposizione QR
 VectorXd solveWithDecompositionQR(const MatrixXd& matrixA, const VectorXd& columnVector)
 {
     VectorXd solutionWithQR = matrixA.colPivHouseholderQr().solve(columnVector);
@@ -352,14 +362,25 @@ void definitionOfTraces(strFractures& frac, strTraces& trac)
                         // trova all'interno della frattura j
                         else if (NumOfExtremes == 1 && isPointInFracture(pointIntersec, frac.VerticesOfFractures[j]) && extremes[0] != pointIntersec)
                         {
-                            // In tal modo, viene registrata una nuova traccia che collega le fratture coinvolte i e j
+                            // Il secondo punto di intersezione viene aggiunto agli estremi, in extremes[1]
                             extremes[NumOfExtremes] = pointIntersec;
                             NumOfExtremes += 1;
+
+                            // Aggiornamento del numero totale di tracce trovate
                             trac.NumberOfTraces += 1;
+
+                            // Aggiunge l'id della nuova traccia a TraceId
                             trac.TraceId.push_back(count);
+
+                            // Creazione di una coppia di id delle fratture che identificano la traccia
                             Vector2i idFracturesTrace = {frac.FractureId[i], frac.FractureId[j]};
+
+                            // Aggiunge la coppia di id a FractureIds
                             trac.FractureIds.push_back(idFracturesTrace);
-                            trac.VerticesOfTraces[count] = extremes;
+
+                            // Aggiunge gli estremi della traccia alla posizione count di VerticesOfTraces
+                            trac.VerticesOfTraces.push_back(extremes);
+
                             count += 1;
                         }
                     }
@@ -417,13 +438,11 @@ void definitionOfTraces(strFractures& frac, strTraces& trac)
                         // trova all'interno della frattura i
                         else if (NumOfExtremes == 1 && isPointInFracture(pointIntersec, frac.VerticesOfFractures[i]) && extremes[0] != pointIntersec)
                         {
-                            // In tal modo, viene registrata una nuova traccia
-
                             // Il secondo punto di intersezione viene aggiunto agli estremi, in extremes[1]
                             extremes[NumOfExtremes] = pointIntersec;
                             NumOfExtremes += 1;
 
-                            // Aggiornamento il numero totale di tracce trovate
+                            // Aggiornamento del numero totale di tracce trovate
                             trac.NumberOfTraces += 1;
 
                             // Aggiunge l'id della nuova traccia a TraceId
@@ -436,9 +455,8 @@ void definitionOfTraces(strFractures& frac, strTraces& trac)
                             trac.FractureIds.push_back(idFracturesTrace);
 
                             // Aggiunge gli estremi della traccia alla posizione count di VerticesOfTraces
-                            trac.VerticesOfTraces[count] = extremes;
+                            trac.VerticesOfTraces.push_back(extremes);
 
-                            // Incremento del contatore
                             count += 1;
                         }
                     }
