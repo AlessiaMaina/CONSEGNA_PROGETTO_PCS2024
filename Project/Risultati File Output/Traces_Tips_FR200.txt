@@ -1,5 +1,5 @@
 # FractureId; NumTraces
-0; 113
+0; 113 
 # TraceId; Tips; Length
 67; false; 1.1129192945332962e+00
 50; false; 8.0634963141206761e-01
