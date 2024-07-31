@@ -2,6 +2,7 @@
 #include "importExport.hpp"
 #include "FracturesAndTraces.hpp"
 #include "SortingAlgorithm_MERGESORT.hpp"
+#include "example_unit_test.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -33,7 +34,8 @@ int main()
 
 
     // IMPORT del file contenente le infomazioni sulle fratture
-    string fileInput = "./DFN/FR200_data.txt";
+    string fileInput = "./DFN/FR362_data.txt";
+
 
     if(!importListFractures(fractures, fileInput))
     {
@@ -65,7 +67,7 @@ int main()
 
 
     // EXPORT del file contenente le informazioni sulle tracce
-    string outputTraceInfo = "./Traces_Info_FR200.txt";
+    string outputTraceInfo = "./Traces_Info_FR362.txt";
 
     if(!generateTracesInfo(traces, outputTraceInfo))
     {
@@ -74,7 +76,7 @@ int main()
 
 
     // EXPORT del file contenente le tipologie delle tracce
-    string outputTraceTips = "./Traces_Tips_FR200.txt";
+    string outputTraceTips = "./Traces_Tips_FR362.txt";
 
     computeTypeTrace(fractures, traces);
     lengthTraces(traces);
@@ -85,6 +87,10 @@ int main()
     {
         return 4;
     }
+
+    string outputFracturesINP = "./FR362_Paraview_Fractures.inp";
+    string outputTracesINP = "./FR362_Paraview_Traces.inp";
+    exportParaview(fractures, traces, outputFracturesINP, outputTracesINP);
 
     return 0;
 }

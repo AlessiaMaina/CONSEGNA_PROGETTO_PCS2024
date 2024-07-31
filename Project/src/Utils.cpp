@@ -37,7 +37,6 @@ double distance(const Vector3d& a, const Vector3d& b)
 }
 
 
-
 // TEST 1: Verificare nella frattura la presenza di lati tutti diversi da zero
 bool testEdgesOfFracture(const strFractures& fractures)
 {
