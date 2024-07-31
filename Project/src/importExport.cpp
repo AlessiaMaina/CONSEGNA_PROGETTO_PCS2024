@@ -130,6 +130,7 @@ bool generateTracesInfo(strTraces& trac, const string& outputFilePath)
 
     outFile << trac.NumberOfTraces << endl;
     outFile << "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2" << endl;
+
     cout << "Il NUMERO DI TRACCE e' pari a: " << trac.NumberOfTraces << endl;
 
     // Ciclo FOR che, per ogni traccia, stampa il relativo identificativo e le coordinate degli estremi che la delimitano

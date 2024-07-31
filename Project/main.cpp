@@ -28,13 +28,12 @@ int main()
     // *************************************************************************************************************************************
 
 
-    // Dichiarazione delle strutture utilizzate
     strFractures fractures;
     strTraces traces;
 
 
     // IMPORT del file contenente le infomazioni sulle fratture
-    string fileInput = "./DFN/FR362_data.txt";
+    string fileInput = "./DFN/FR3_data.txt";
 
 
     if(!importListFractures(fractures, fileInput))
@@ -67,7 +66,7 @@ int main()
 
 
     // EXPORT del file contenente le informazioni sulle tracce
-    string outputTraceInfo = "./Traces_Info_FR362.txt";
+    string outputTraceInfo = "./Traces_Info_FR3.txt";
 
     if(!generateTracesInfo(traces, outputTraceInfo))
     {
@@ -76,20 +75,20 @@ int main()
 
 
     // EXPORT del file contenente le tipologie delle tracce
-    string outputTraceTips = "./Traces_Tips_FR362.txt";
+    string outputTraceTips = "./Traces_Tips_FR3.txt";
 
     computeTypeTrace(fractures, traces);
     lengthTraces(traces);
     orderTraces(traces);
-
 
     if (!generateTracesTips(fractures, traces, outputTraceTips))
     {
         return 4;
     }
 
-    string outputFracturesINP = "./FR362_Paraview_Fractures.inp";
-    string outputTracesINP = "./FR362_Paraview_Traces.inp";
+    // EXPORT dei file per Paraview
+    string outputFracturesINP = "./FR3_Paraview_Fractures.inp";
+    string outputTracesINP = "./FR3_Paraview_Traces.inp";
     exportParaview(fractures, traces, outputFracturesINP, outputTracesINP);
 
     return 0;
