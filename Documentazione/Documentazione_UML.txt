@@ -2,6 +2,7 @@
 
 skinparam defaultFontSize 19
 
+
 package DiscreteAndFractureNetworkLibrary 
 {
 
@@ -10,7 +11,7 @@ class strFractures
 + NumberOfFractures: unsigned int
 + FractureId: vector<unsigned int>
 + NumberOfVertices: vector<unsigned int>
-+ VerticesOfFractures: map <unsigned int, vector<Vector3d>>
++ VerticesOfFractures: vector<vector<Vector3d>>
 
 ..Non member functions ..
 + bool importListFractures(strFractures& fractures, const string& inputFilePath)                         
@@ -48,9 +49,11 @@ class strTraces
 + NumberOfTraces: unsigned int
 + TraceId: vector<unsigned int>
 + FracturesIds: vector<Vector2i>
-+ VerticesOfTraces: map<unsigned int, array<Vector3d, 2>
-+ Tips: vector<bool>
++ VerticesOfTraces: vector<array<Vector3d, 2>>
++ Tips: vector<array<bool,2>>
 + TraceLenght: vector<double>
++ passing: vector<pair<double, unsigned int>>
++ notPassing: vector<pair<double, unsigned int>>
 
 
 ..Non member functions ..
@@ -68,11 +71,23 @@ TESTOverTraces
 
 }
 
+
+
 package MergeSort <<Frame>>
 {
 }
 
 MergeSort..> strTraces
+
+
+
+package Gedim <<Frame>>
+{
+}
+note "Gedim è una libreria esterna per l'esportazione in Paraview" as GedimN
+GedimN..Gedim
+
+Gedim ..> DiscreteAndFractureNetworkLibrary::gedimInterface 
 
 
 
@@ -86,6 +101,7 @@ EigenLibrary.. Eigen
 Eigen..> DiscreteAndFractureNetworkLibrary
 
 strFractures "1"--o "1" strBoundingSphere : has
+
 
 
 @enduml
