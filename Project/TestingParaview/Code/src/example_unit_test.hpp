@@ -67,9 +67,10 @@ void exportParaview(strFractures& frac, strTraces& trac, const string& fileFract
     vector<UCDProperty<double>> points_properties;
     vector<UCDProperty<double>> frac_properties;
 
+    // Indica un vettore di interi che ha dimensione pari al numero di elementi di idVerticesAllFrac
     VectorXi frac_materials(idVerticesAllFrac.size());
 
-    // Ciclo FOR che ad ogni poligono associa un indice sequenziale (materiale)
+    // Ciclo FOR che ad ogni poligono associa un indice sequenziale
     for (int i = 0; i < frac_materials.size(); ++i)
     {
         frac_materials(i) = i;
@@ -107,9 +108,10 @@ void exportParaview(strFractures& frac, strTraces& trac, const string& fileFract
         indexOfEdges(1, i) = i * 2 + 1;
     }
 
+    // Indica un vettore di interi che ha dimensione pari al numero di tracce
     VectorXi trac_materials(n);
 
-    // Ciclo FOR che ad ogni traccia associa un indice sequenziale (materiale)
+    // Ciclo FOR che ad ogni traccia associa un indice sequenziale
     for (unsigned int i = 0; i < n; ++i)
     {
         trac_materials(i) = i;
